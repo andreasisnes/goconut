@@ -4,8 +4,6 @@ import (
 	"os"
 	"reflect"
 	"strings"
-
-	"github.com/andreasisnes/gonfig"
 )
 
 type EnvironmentVariablesOptions struct {

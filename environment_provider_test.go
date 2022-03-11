@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/andreasisnes/gonfig"
 	"github.com/stretchr/testify/assert"
 )
 
