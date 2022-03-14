@@ -1,4 +1,4 @@
-package goconfig
+package goconut
 
 type IBuilder interface {
 	Clear()

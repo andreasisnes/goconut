@@ -1,4 +1,4 @@
-package goconfig
+package goconut
 
 type ISource interface {
 	Exists(key string) bool

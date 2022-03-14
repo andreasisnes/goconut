@@ -1,4 +1,4 @@
-module github.com/andreasisnes/go-config/v1
+module github.com/andreasisnes/goconut
 
 go 1.17
 

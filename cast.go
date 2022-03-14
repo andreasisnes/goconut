@@ -1,4 +1,4 @@
-package goconfig
+package goconut
 
 import (
 	"reflect"
