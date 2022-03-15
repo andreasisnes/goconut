@@ -1,5 +1,5 @@
 {
-    "SimpleField": "<SimpleField>",
+    "SimpleField": "<SimpleField-1>",
     "NestedField": {
         "SimpleField": "<NestedField.SimpleField>",
         "NestedField": {
