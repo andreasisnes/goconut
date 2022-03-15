@@ -9,11 +9,12 @@ import (
 )
 
 var (
-	dataDir = "data"
-	yaml1   = path.Join(dataDir, "config1.yaml")
-	toml1   = path.Join(dataDir, "config1.toml")
-	json1   = path.Join(dataDir, "jsonconfig1.json")
-	json2   = path.Join(dataDir, "jsonconfig2.json")
+	dataDir  = "data"
+	notAFile = path.Join(dataDir, "notafile.yaml")
+	yaml1    = path.Join(dataDir, "config1.yaml")
+	toml1    = path.Join(dataDir, "config1.toml")
+	json1    = path.Join(dataDir, "jsonconfig1.json")
+	json2    = path.Join(dataDir, "jsonconfig2.json")
 )
 
 func TestJsonObjectField(t *testing.T) {
@@ -51,4 +52,22 @@ func TestYamlObject(t *testing.T) {
 
 	res := config.Get("SimpleField", nil)
 	assert.Equal(t, "<SimpleField-1>", res)
+}
+
+func TestUnkownFile(t *testing.T) {
+	config := goconut.NewBuilder().
+		Add(NewFileProvider(notAFile, false, true)).
+		Build()
+
+	res := config.Get("SimpleField", nil)
+	assert.Nil(t, res)
+}
+
+func TestUnkownFileAsNotOptional(t *testing.T) {
+	defer func() {
+		assert.NotNil(t, recover())
+	}()
+	goconut.NewBuilder().
+		Add(NewFileProvider(notAFile, true, true)).
+		Build()
 }

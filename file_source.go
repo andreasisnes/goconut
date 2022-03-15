@@ -69,7 +69,7 @@ func (f *FileSource) IsDirty() bool {
 
 func (f *FileSource) GetKeys() []string {
 	res := make([]string, 0)
-	for k, _ := range f.Config {
+	for k := range f.ConfigFlat {
 		res = append(res, k)
 	}
 
@@ -95,6 +95,10 @@ func (f *FileSource) Load() {
 				f.unmarshal(yaml.Unmarshal)
 			case ".toml":
 				f.unmarshal(toml.Unmarshal)
+			default:
+				if !f.Optional {
+					log.Fatalf("'%s' is not a <.json, yml, yaml, toml> file", path.Base(f.Filename))
+				}
 			}
 			f.DirtyFile = false
 		}
