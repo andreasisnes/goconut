@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 	"sync"
 
 	"github.com/andreasisnes/goconut"
@@ -86,25 +87,14 @@ func (f *FileSource) Load() {
 			panic(err)
 		} else {
 			f.Content = content
-			switch path.Ext(f.Filename) {
-			case "json":
-				json.Unmarshal(f.Content, &f.Config)
-				f.ConfigFlat = goflat.Map(f.Config, &goflat.Options{
-					Delimiter: ".",
-					Fold:      goflat.UpperCaseFold,
-				})
-			case "yml", "yaml":
-				yaml.Unmarshal(f.Content, &f.Config)
-				f.ConfigFlat = goflat.Map(f.Config, &goflat.Options{
-					Delimiter: ".",
-					Fold:      goflat.UpperCaseFold,
-				})
-			case "toml":
-				toml.Unmarshal(f.Content, &f.Config)
-				f.ConfigFlat = goflat.Map(f.Config, &goflat.Options{
-					Delimiter: ".",
-					Fold:      goflat.UpperCaseFold,
-				})
+			extension := strings.ToLower(path.Ext(f.Filename))
+			switch extension {
+			case ".json":
+				f.unmarshal(json.Unmarshal)
+			case ".yml", ".yaml":
+				f.unmarshal(yaml.Unmarshal)
+			case ".toml":
+				f.unmarshal(toml.Unmarshal)
 			}
 			f.DirtyFile = false
 		}
@@ -151,6 +141,19 @@ func (f *FileSource) watcher() {
 			return
 		}
 	}
+}
+
+func (f *FileSource) unmarshal(fn func([]byte, interface{}) error) error {
+	if err := fn(f.Content, &f.Config); err != nil {
+		return err
+	}
+
+	f.ConfigFlat = goflat.Map(f.Config, &goflat.Options{
+		Delimiter: goflat.DefaultDelimiter,
+		Fold:      goflat.UpperCaseFold,
+	})
+
+	return nil
 }
 
 func fileExists(filename string) bool {
