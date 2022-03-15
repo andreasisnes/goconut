@@ -1,0 +1,30 @@
+{
+    "SimpleField": "<SimpleField>",
+    "NestedField": {
+        "SimpleField": "<NestedField.SimpleField>",
+        "NestedField": {
+            "SimpleField": "<NestedField.NestedField.SimpleField>"
+        }
+    },
+    "List": [
+        false,
+        1,
+        1.0,
+        {
+            "SimpleField": "<List.3.SimpleField>"
+        },
+        [
+            false,
+            1,
+            1.0,
+            {
+                "SimpleField": "<List.4.3.SimpleField>"
+            },
+            [
+                {
+                    "SimpleField": "<List.4.4.0.SimpleField>"
+                }
+            ]
+        ]
+    ]
+}
