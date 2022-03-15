@@ -48,11 +48,11 @@ func (c *Configuration) Get(key string, result interface{}) interface{} {
 				return value
 			}
 
-			return CastAndTryAssignValue(source, value)
+			return CastAndTryAssignValue(value, result)
 		}
 	}
 
-	return nil
+	return result
 }
 
 func (c *Configuration) Refresh() bool {
