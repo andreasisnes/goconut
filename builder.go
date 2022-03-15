@@ -30,5 +30,9 @@ func (c *Builder) Sources() []ISource {
 }
 
 func (c *Builder) Build() IConfiguration {
+	for _, c := range c.sources {
+		c.Load()
+	}
+
 	return newConfiguration(c.sources)
 }
