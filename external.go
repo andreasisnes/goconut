@@ -2,9 +2,9 @@ package goconut
 
 const (
 	RefreshAll RefreshPolicy = iota
-	RefreshCurrent
-	RefreshAllOver
 	RefreshAllUnder
+	RefreshAllOver
+	RefreshCurrent
 )
 
 type RefreshPolicy int
@@ -25,6 +25,7 @@ type ISource interface {
 	Get(key string) interface{}
 	GetKeys() []string
 	IsDirty() bool
+	Options() SourceOptions
 	Load()
 	Deconstruct()
 }
