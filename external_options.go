@@ -7,8 +7,6 @@ const (
 	RefreshCurrent
 )
 
-type RefreshPolicy int
-
 type SourceOptions struct {
 	ReloadOnChange  bool
 	Optional        bool
@@ -20,12 +18,4 @@ type SentinelOptions struct {
 	RefreshPolicy RefreshPolicy
 }
 
-type ISource interface {
-	Exists(key string) bool
-	Get(key string) interface{}
-	GetKeys() []string
-	IsDirty() bool
-	Options() SourceOptions
-	Load()
-	Deconstruct()
-}
+type RefreshPolicy int

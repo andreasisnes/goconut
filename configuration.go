@@ -21,11 +21,12 @@ type IConfiguration interface {
 }
 
 type Configuration struct {
+	RefreshC chan ISource
+	QuitC    chan interface{}
+
 	waitgroup sync.WaitGroup
 	sources   []ISource
 	delimiter string
-	RefreshC  chan ISource
-	QuitC     chan interface{}
 }
 
 func newConfiguration(sources []ISource) IConfiguration {
@@ -35,6 +36,10 @@ func newConfiguration(sources []ISource) IConfiguration {
 		delimiter: ".",
 		RefreshC:  make(chan ISource),
 		QuitC:     make(chan interface{}),
+	}
+
+	for _, source := range config.sources {
+		source.Connect(config)
 	}
 
 	config.Refresh()
