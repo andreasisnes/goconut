@@ -2,8 +2,8 @@ package goconut
 
 const (
 	RefreshAll RefreshPolicy = iota
-	RefreshAllUnder
-	RefreshAllOver
+	RefreshCurrentAndOver
+	RefreshCurrentAndUnder
 	RefreshCurrent
 )
 
