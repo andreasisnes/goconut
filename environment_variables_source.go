@@ -1,64 +1,95 @@
 package gonfigenvironmentvariables
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/andreasisnes/goconut"
 )
 
 type EnvironmentVariablesOptions struct {
 	goconut.SourceOptions
-	Delimiter string
+	Delimiter       string
+	RefreshInterval time.Duration
 }
 
 type EnvironmentVariablesSource struct {
-	EnvOptions    EnvironmentVariablesOptions
-	WaitGroup     sync.WaitGroup
-	Configuration map[string]interface{}
+	goconut.SourceBase
+	EnvOptions EnvironmentVariablesOptions
+	WaitGroup  sync.WaitGroup
+	QuitC      chan interface{}
 }
 
 func NewEnvironmentVariablesSource(options *EnvironmentVariablesOptions) goconut.ISource {
-	return &EnvironmentVariablesSource{
-		EnvOptions:    *options,
-		WaitGroup:     sync.WaitGroup{},
-		Configuration: make(map[string]interface{}),
+	if options == nil {
+		options = &EnvironmentVariablesOptions{
+			Delimiter:       "__",
+			RefreshInterval: time.Second,
+		}
 	}
-}
+	if options.Delimiter == "" {
+		options.Delimiter = "__"
+	}
 
-func (e *EnvironmentVariablesSource) Options() goconut.SourceOptions {
-	return e.EnvOptions.SourceOptions
-}
+	env := &EnvironmentVariablesSource{
+		EnvOptions: *options,
+		WaitGroup:  sync.WaitGroup{},
+	}
+	goconut.InitSourceBase(&env.SourceBase, &options.SourceOptions)
 
-func (e *EnvironmentVariablesSource) Exists(key string) bool {
-	return false
-}
+	if env.SourceOptions.SentinelOptions == nil || env.SourceOptions.ReloadOnChange {
+		go env.watcher()
+	}
 
-func (e *EnvironmentVariablesSource) Get(key string) interface{} {
-	return nil
-}
-
-func (e *EnvironmentVariablesSource) GetKeys() []string {
-	return nil
-}
-
-func (e *EnvironmentVariablesSource) IsDirty() bool {
-	return false
+	return env
 }
 
 func (e *EnvironmentVariablesSource) Load() {
 	for _, variable := range os.Environ() {
 		keyIdx := strings.Index(variable, "=")
-		e.Configuration[variable[:keyIdx]] = variable[keyIdx+1:]
+		e.Flatmap[variable[:keyIdx]] = variable[keyIdx+1:]
+		e.Flatmap[e.formatKey(variable[:keyIdx])] = variable[keyIdx+1:]
 	}
 }
 
 func (e *EnvironmentVariablesSource) Deconstruct() {
-
+	e.QuitC <- struct{}{}
+	e.WaitGroup.Wait()
 }
 
 func (e *EnvironmentVariablesSource) watcher() {
 	e.WaitGroup.Add(1)
 	defer e.WaitGroup.Done()
+	for {
+		timer := time.NewTimer(e.EnvOptions.RefreshInterval)
+		select {
+		case <-timer.C:
+			fmt.Println("kicked")
+			for _, variable := range os.Environ() {
+				keyIdx := strings.Index(variable, "=")
+				key := variable[:keyIdx]
+				formattedKey := e.formatKey(key)
+				fmt.Println(formattedKey)
+				if val, ok := e.Flatmap[key]; !ok || val == variable[keyIdx+1:] {
+					e.NotifyDirtyness()
+					break
+				}
+
+				if val, ok := e.Flatmap[formattedKey]; !ok || val == variable[keyIdx+1:] {
+					e.NotifyDirtyness()
+					break
+				}
+			}
+			continue
+		case <-e.QuitC:
+			return
+		}
+	}
+}
+
+func (e *EnvironmentVariablesSource) formatKey(key string) string {
+	return strings.ToUpper(strings.ReplaceAll(key, e.EnvOptions.Delimiter, "."))
 }
