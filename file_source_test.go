@@ -11,10 +11,12 @@ import (
 var (
 	dataDir  = "data"
 	notAFile = path.Join(dataDir, "notafile.yaml")
-	yaml1    = path.Join(dataDir, "config1.yaml")
+	json1    = path.Join(dataDir, "config1.json")
 	toml1    = path.Join(dataDir, "config1.toml")
-	json1    = path.Join(dataDir, "jsonconfig1.json")
-	json2    = path.Join(dataDir, "jsonconfig2.json")
+	yaml1    = path.Join(dataDir, "config1.yaml")
+	json2    = path.Join(dataDir, "config2.json")
+	toml2    = path.Join(dataDir, "config2.toml")
+	yaml2    = path.Join(dataDir, "config2.yaml")
 )
 
 func TestJsonObjectField(t *testing.T) {
