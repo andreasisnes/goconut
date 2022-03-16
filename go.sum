@@ -1,5 +1,7 @@
 github.com/andreasisnes/goconut v0.0.0-20220315151116-970d3edd03b4 h1:x72UTMUDsT/XvzU40LhgJCobvr6jSHZWyRcy3bM0mPQ=
 github.com/andreasisnes/goconut v0.0.0-20220315151116-970d3edd03b4/go.mod h1:D1HC/4wM+AZimA3tYjnKPdK33QHOUkFizrlWamCA/8I=
+github.com/andreasisnes/goconut v0.0.0-20220316123711-506b9f7acdee h1:Hvca/SY81ZtTS2glYr197UNgzW/FIBzwdI4SkOvsH3A=
+github.com/andreasisnes/goconut v0.0.0-20220316123711-506b9f7acdee/go.mod h1:D1HC/4wM+AZimA3tYjnKPdK33QHOUkFizrlWamCA/8I=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/spf13/cast v1.4.1 h1:s0hze+J0196ZfEMTs80N7UlFt0BDuQ7Q+JDnHiMWKdA=

@@ -9,50 +9,56 @@ import (
 )
 
 type EnvironmentVariablesOptions struct {
-	ReloadOnChange bool
-	
+	goconut.SourceOptions
+	Delimiter string
 }
 
-type EnvironmentVariablesProvider struct {
+type EnvironmentVariablesSource struct {
+	EnvOptions    EnvironmentVariablesOptions
 	WaitGroup     sync.WaitGroup
-	configuration map[string]interface{}
+	Configuration map[string]interface{}
 }
 
-func NewEnvironmentVariablesProvider(options *EnvironmentVariablesOptions) goconut.ISource {
-	return &EnvironmentVariablesProvider{
+func NewEnvironmentVariablesSource(options *EnvironmentVariablesOptions) goconut.ISource {
+	return &EnvironmentVariablesSource{
+		EnvOptions:    *options,
 		WaitGroup:     sync.WaitGroup{},
-		configuration: make(map[string]interface{}),
+		Configuration: make(map[string]interface{}),
 	}
 }
 
-func (e *EnvironmentVariablesProvider) Exists(key string) bool {
+func (e *EnvironmentVariablesSource) Options() goconut.SourceOptions {
+	return e.EnvOptions.SourceOptions
+}
+
+func (e *EnvironmentVariablesSource) Exists(key string) bool {
 	return false
 }
 
-func (e *EnvironmentVariablesProvider) Get(key string) interface{} {
+func (e *EnvironmentVariablesSource) Get(key string) interface{} {
 	return nil
 }
 
-func (e *EnvironmentVariablesProvider) GetKeys() []string {
+func (e *EnvironmentVariablesSource) GetKeys() []string {
 	return nil
 }
 
-func (e *EnvironmentVariablesProvider) IsDirty() bool {
+func (e *EnvironmentVariablesSource) IsDirty() bool {
 	return false
 }
 
-func (e *EnvironmentVariablesProvider) Load() {
+func (e *EnvironmentVariablesSource) Load() {
 	for _, variable := range os.Environ() {
 		keyIdx := strings.Index(variable, "=")
-		e.configuration[variable[:keyIdx]] = variable[keyIdx+1:]
+		e.Configuration[variable[:keyIdx]] = variable[keyIdx+1:]
 	}
 }
 
-func (e *EnvironmentVariablesProvider) Deconstruct() {
+func (e *EnvironmentVariablesSource) Deconstruct() {
 
 }
 
-func (e *EnvironmentVariablesProvider) watcher() {
+func (e *EnvironmentVariablesSource) watcher() {
 	e.WaitGroup.Add(1)
 	defer e.WaitGroup.Done()
 }
