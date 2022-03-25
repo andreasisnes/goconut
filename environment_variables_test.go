@@ -23,17 +23,20 @@ func TestField(t *testing.T) {
 	assert.Equal(t, expected, b.Get("TMP_TEST_VALUE", nil))
 }
 
-func TestCreatingNewField(t *testing.T) {
+func TestFieldWithRefresh(t *testing.T) {
 	b := newBuilder(&EnvironmentVariablesOptions{
-		Delimiter:       "__",
 		RefreshInterval: time.Second,
 		SourceOptions: goconut.SourceOptions{
-			ReloadOnChange: false,
+			ReloadOnChange: true,
 		},
 	})
-	expected := "TEST_VALUE"
-	os.Setenv("TMP_TEST_VALUE", expected)
-	//time.Sleep(time.Second)
 
-	assert.Nil(t, b.Get("TMP_TEST_VALUE", nil))
+	key := "TestFieldWithRefresh"
+	expected := "TEST_VALUE"
+	os.Setenv(key, expected)
+	time.Sleep(time.Second * 5)
+	result := b.Get(key, nil)
+	b.Deconstruct()
+
+	assert.Equal(t, expected, result)
 }

@@ -1,7 +1,6 @@
 package gonfigenvironmentvariables
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"sync"
@@ -13,6 +12,7 @@ import (
 type EnvironmentVariablesOptions struct {
 	goconut.SourceOptions
 	Delimiter       string
+	Prefix          string
 	RefreshInterval time.Duration
 }
 
@@ -40,7 +40,7 @@ func NewEnvironmentVariablesSource(options *EnvironmentVariablesOptions) goconut
 	}
 	goconut.InitSourceBase(&env.SourceBase, &options.SourceOptions)
 
-	if env.SourceOptions.SentinelOptions == nil || env.SourceOptions.ReloadOnChange {
+	if env.SourceOptions.SentinelOptions != nil || env.SourceOptions.ReloadOnChange {
 		go env.watcher()
 	}
 
@@ -66,13 +66,13 @@ func (e *EnvironmentVariablesSource) watcher() {
 	for {
 		timer := time.NewTimer(e.EnvOptions.RefreshInterval)
 		select {
+		case <-e.QuitC:
+			return
 		case <-timer.C:
-			fmt.Println("kicked")
 			for _, variable := range os.Environ() {
 				keyIdx := strings.Index(variable, "=")
 				key := variable[:keyIdx]
 				formattedKey := e.formatKey(key)
-				fmt.Println(formattedKey)
 				if val, ok := e.Flatmap[key]; !ok || val == variable[keyIdx+1:] {
 					e.NotifyDirtyness()
 					break
@@ -84,12 +84,13 @@ func (e *EnvironmentVariablesSource) watcher() {
 				}
 			}
 			continue
-		case <-e.QuitC:
-			return
+
 		}
 	}
 }
 
 func (e *EnvironmentVariablesSource) formatKey(key string) string {
-	return strings.ToUpper(strings.ReplaceAll(key, e.EnvOptions.Delimiter, "."))
+	key = strings.ToUpper(strings.ReplaceAll(key, e.EnvOptions.Delimiter, "."))
+	prefix := strings.ToUpper(e.EnvOptions.Prefix)
+	return strings.TrimPrefix(key, prefix)
 }
