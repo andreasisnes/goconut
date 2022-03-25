@@ -161,13 +161,13 @@ func (c *Configuration) newMethod(source ISource) {
 	case RefreshCurrent:
 		source.Load()
 	case RefreshCurrentAndOver:
-		c.refreshCurrendAndAbove(source)
+		c.refreshCurrentAndAbove(source)
 	case RefreshCurrentAndUnder:
-		c.refreshCurrendAndUnder(source)
+		c.refreshCurrentAndUnder(source)
 	}
 }
 
-func (c *Configuration) refreshCurrendAndAbove(source ISource) {
+func (c *Configuration) refreshCurrentAndAbove(source ISource) {
 	wg := sync.WaitGroup{}
 	isAbove := false
 	for _, s := range c.sources {
@@ -185,7 +185,7 @@ func (c *Configuration) refreshCurrendAndAbove(source ISource) {
 	wg.Wait()
 }
 
-func (c *Configuration) refreshCurrendAndUnder(source ISource) {
+func (c *Configuration) refreshCurrentAndUnder(source ISource) {
 	wg := sync.WaitGroup{}
 	isUnder := true
 	for _, s := range c.sources {

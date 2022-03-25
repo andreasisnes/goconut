@@ -34,6 +34,10 @@ func (s *SourceBase) Connect(configuration *Configuration) {
 		}
 	}
 
+	if s.Configurations == nil {
+		InitSourceBase(s, &s.SourceOptions)
+	}
+
 	s.Configurations = append(s.Configurations, configuration)
 }
 
@@ -43,6 +47,7 @@ func (s *SourceBase) Exists(key string) bool {
 
 func (s *SourceBase) Get(key string) (value interface{}) {
 	if s.Flatmap == nil {
+		InitSourceBase(s, &s.SourceOptions)
 		return nil
 	}
 
