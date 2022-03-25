@@ -7,7 +7,7 @@ type ISource interface {
 	Options() SourceOptions
 	Connect(configuration *Configuration)
 	Load()
-	Deconstruct()
+	Deconstruct(configuration *Configuration)
 }
 
 func NewSourceBase(c *Configuration) ISource {
@@ -78,9 +78,7 @@ func (s *SourceBase) Options() SourceOptions {
 }
 
 func (s *SourceBase) Load() {
-
 }
 
-func (s *SourceBase) Deconstruct() {
-
+func (s *SourceBase) Deconstruct(configuration *Configuration) {
 }

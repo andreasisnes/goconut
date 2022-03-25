@@ -22,7 +22,7 @@ type IConfiguration interface {
 
 type Configuration struct {
 	RefreshC chan ISource
-	QuitC    chan interface{}
+	QuitC    chan struct{}
 
 	waitgroup sync.WaitGroup
 	sources   []ISource
@@ -35,7 +35,7 @@ func newConfiguration(sources []ISource) IConfiguration {
 		sources:   sources,
 		delimiter: ".",
 		RefreshC:  make(chan ISource),
-		QuitC:     make(chan interface{}),
+		QuitC:     make(chan struct{}),
 	}
 
 	for _, source := range config.sources {
@@ -122,11 +122,11 @@ func (c *Configuration) Deconstruct() IConfiguration {
 		wg.Add(1)
 		go func(sourceArg ISource) {
 			defer wg.Done()
-			sourceArg.Deconstruct()
+			sourceArg.Deconstruct(c)
 		}(source)
 	}
 	wg.Wait()
-	c.waitgroup.Done()
+	c.waitgroup.Wait()
 
 	return c
 }
