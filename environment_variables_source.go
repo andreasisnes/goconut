@@ -35,6 +35,7 @@ func NewEnvironmentVariablesSource(options *EnvironmentVariablesOptions) goconut
 	}
 
 	env := &EnvironmentVariablesSource{
+		QuitC:      make(chan interface{}),
 		EnvOptions: *options,
 		WaitGroup:  sync.WaitGroup{},
 	}
@@ -63,8 +64,8 @@ func (e *EnvironmentVariablesSource) Deconstruct() {
 func (e *EnvironmentVariablesSource) watcher() {
 	e.WaitGroup.Add(1)
 	defer e.WaitGroup.Done()
+	timer := time.NewTimer(e.EnvOptions.RefreshInterval)
 	for {
-		timer := time.NewTimer(e.EnvOptions.RefreshInterval)
 		select {
 		case <-e.QuitC:
 			return
@@ -73,19 +74,18 @@ func (e *EnvironmentVariablesSource) watcher() {
 				keyIdx := strings.Index(variable, "=")
 				key := variable[:keyIdx]
 				formattedKey := e.formatKey(key)
-				if val, ok := e.Flatmap[key]; !ok || val == variable[keyIdx+1:] {
+				if val, ok := e.Flatmap[key]; !ok || val != variable[keyIdx+1:] {
 					e.NotifyDirtyness()
 					break
 				}
 
-				if val, ok := e.Flatmap[formattedKey]; !ok || val == variable[keyIdx+1:] {
+				if val, ok := e.Flatmap[formattedKey]; !ok || val != variable[keyIdx+1:] {
 					e.NotifyDirtyness()
 					break
 				}
 			}
-			continue
-
 		}
+		timer.Reset(e.EnvOptions.RefreshInterval)
 	}
 }
 
