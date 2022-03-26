@@ -24,21 +24,21 @@ type Configuration struct {
 	RefreshC chan ISource
 	QuitC    chan struct{}
 
-	waitgroup sync.WaitGroup
-	sources   []ISource
-	delimiter string
+	Waitgroup sync.WaitGroup
+	Sources   []ISource
+	Delimiter string
 }
 
 func newConfiguration(sources []ISource) IConfiguration {
 	config := &Configuration{
-		waitgroup: sync.WaitGroup{},
-		sources:   sources,
-		delimiter: ".",
+		Waitgroup: sync.WaitGroup{},
+		Sources:   sources,
+		Delimiter: ".",
 		RefreshC:  make(chan ISource),
 		QuitC:     make(chan struct{}),
 	}
 
-	for _, source := range config.sources {
+	for _, source := range config.Sources {
 		source.Connect(config.RefreshC)
 	}
 
@@ -50,8 +50,8 @@ func newConfiguration(sources []ISource) IConfiguration {
 
 func (c *Configuration) Get(key string, result interface{}) interface{} {
 	key = strings.ToUpper(key)
-	for idx := range c.sources {
-		source := c.sources[len(c.sources)-1-idx]
+	for idx := range c.Sources {
+		source := c.Sources[len(c.Sources)-1-idx]
 		if source.Exists(key) {
 			value := source.Get(key)
 			if result == nil {
@@ -76,7 +76,7 @@ func (c *Configuration) Refresh() (successfullyRefreshed bool) {
 	}()
 
 	wg := sync.WaitGroup{}
-	for _, source := range c.sources {
+	for _, source := range c.Sources {
 		wg.Add(1)
 		go func(sourceArg ISource) {
 			defer wg.Done()
@@ -95,7 +95,7 @@ func (c *Configuration) Unmarshal(value interface{}) error {
 	}
 
 	keys := make(map[string]ISource)
-	for _, source := range c.sources {
+	for _, source := range c.Sources {
 		for _, key := range source.GetKeys() {
 			keys[key] = source
 		}
@@ -117,7 +117,7 @@ func (c *Configuration) Deconstruct() IConfiguration {
 	}()
 	c.QuitC <- struct{}{}
 	wg := sync.WaitGroup{}
-	for _, source := range c.sources {
+	for _, source := range c.Sources {
 		wg.Add(1)
 		go func(sourceArg ISource) {
 			defer wg.Done()
@@ -125,14 +125,14 @@ func (c *Configuration) Deconstruct() IConfiguration {
 		}(source)
 	}
 	wg.Wait()
-	c.waitgroup.Wait()
+	c.Waitgroup.Wait()
 
 	return c
 }
 
 func (c *Configuration) autoRefresh() {
-	c.waitgroup.Add(1)
-	defer c.waitgroup.Done()
+	c.Waitgroup.Add(1)
+	defer c.Waitgroup.Done()
 
 	for {
 		select {
@@ -141,7 +141,7 @@ func (c *Configuration) autoRefresh() {
 				source.Load()
 			}
 			if source.Options().SentinelOptions != nil {
-				c.LoadSentinel(source)
+				c.loadSentinel(source)
 			}
 		case <-c.QuitC:
 			return
@@ -149,7 +149,7 @@ func (c *Configuration) autoRefresh() {
 	}
 }
 
-func (c *Configuration) LoadSentinel(source ISource) {
+func (c *Configuration) loadSentinel(source ISource) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Recovered from error:\n", r)
@@ -176,15 +176,15 @@ func (c *Configuration) LoadSentinel(source ISource) {
 func (c *Configuration) refreshCurrentAndAbove(source ISource) {
 	wg := sync.WaitGroup{}
 	isAbove := false
-	for _, s := range c.sources {
+	for _, s := range c.Sources {
 		if s == source {
 			isAbove = true
 		}
 		if isAbove {
 			wg.Add(1)
 			go func(sourceArg ISource) {
-				sourceArg.Load()
 				defer wg.Done()
+				sourceArg.Load()
 			}(source)
 		}
 	}
@@ -194,12 +194,12 @@ func (c *Configuration) refreshCurrentAndAbove(source ISource) {
 func (c *Configuration) refreshCurrentAndUnder(source ISource) {
 	wg := sync.WaitGroup{}
 	isUnder := true
-	for _, s := range c.sources {
+	for _, s := range c.Sources {
 		if isUnder {
 			wg.Add(1)
 			go func(sourceArg ISource) {
-				sourceArg.Load()
 				defer wg.Done()
+				sourceArg.Load()
 			}(source)
 		}
 		if s == source {
