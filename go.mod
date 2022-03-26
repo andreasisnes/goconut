@@ -3,7 +3,7 @@ module github.com/andreasisnes/go-config/v1/environmentvariables
 go 1.17
 
 require (
-	github.com/andreasisnes/goconut v0.0.0-20220325162535-06e9f8db3332
+	github.com/andreasisnes/goconut v0.0.0-20220326105345-48db2c4c890d
 	github.com/stretchr/testify v1.2.2
 )
 

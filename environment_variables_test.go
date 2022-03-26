@@ -36,7 +36,6 @@ func TestFieldWithRefresh(t *testing.T) {
 	os.Setenv(key, expected)
 	time.Sleep(time.Second * 3)
 	result := b.Get(key, nil)
-	b.Deconstruct()
-
 	assert.Equal(t, expected, result)
+	b.Deconstruct()
 }
