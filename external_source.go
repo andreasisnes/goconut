@@ -87,6 +87,8 @@ func (source *SourceBase) GetRefreshedValue(key string) interface{} {
 	if !source.SourceOptions.Optional {
 		panic("'GetRefreshedValue' is an abstract receiver method. External source needs to implement this method")
 	}
+
+	return nil
 }
 
 // External source implementation
