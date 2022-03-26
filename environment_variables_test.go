@@ -9,33 +9,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newBuilder(option *EnvironmentVariablesOptions) goconut.IConfiguration {
+func newConfig(option *EnvironmentVariablesOptions) goconut.IConfiguration {
 	return goconut.NewBuilder().
 		Add(NewEnvironmentVariablesSource(option)).
 		Build()
 }
 
-func TestField(t *testing.T) {
+func TestGet(t *testing.T) {
+	key := "TestGet"
 	expected := "TEST_VALUE"
-	os.Setenv("TMP_TEST_VALUE", expected)
-	b := newBuilder(nil)
+	os.Setenv(key, expected)
+	config := newConfig(nil)
 
-	assert.Equal(t, expected, b.Get("TMP_TEST_VALUE", nil))
+	assert.Equal(t, expected, config.Get(key, nil))
 }
 
-func TestFieldWithRefresh(t *testing.T) {
-	b := newBuilder(&EnvironmentVariablesOptions{
+func TestGetAfterAddedValue(t *testing.T) {
+	config := newConfig(&EnvironmentVariablesOptions{
 		RefreshInterval: time.Second,
 		SourceOptions: goconut.SourceOptions{
 			ReloadOnChange: true,
 		},
 	})
 
-	key := "TestFieldWithRefresh"
+	key := "TestGetAfterAddedValue"
 	expected := "TEST_VALUE"
 	os.Setenv(key, expected)
 	time.Sleep(time.Second * 3)
-	result := b.Get(key, nil)
+	result := config.Get(key, nil)
+
 	assert.Equal(t, expected, result)
-	b.Deconstruct()
+	config.Deconstruct()
 }

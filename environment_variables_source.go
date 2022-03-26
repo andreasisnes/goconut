@@ -10,7 +10,8 @@ import (
 )
 
 const (
-	DefaultDelimiter = "__"
+	DefaultDelimiter       = "__"
+	DefaultRefreshInterval = time.Second * 10
 )
 
 type EnvironmentVariablesOptions struct {
@@ -31,7 +32,7 @@ func NewEnvironmentVariablesSource(options *EnvironmentVariablesOptions) goconut
 	if options == nil {
 		options = &EnvironmentVariablesOptions{
 			Delimiter:       DefaultDelimiter,
-			RefreshInterval: time.Second,
+			RefreshInterval: DefaultRefreshInterval,
 		}
 	}
 
@@ -64,7 +65,15 @@ func (e *EnvironmentVariablesSource) Load() {
 }
 
 func (e *EnvironmentVariablesSource) GetRefreshedValue(key string) interface{} {
-	return e.Flatmap[key]
+	key = e.formatKey(key)
+	for _, variable := range os.Environ() {
+		keyIdx := strings.Index(variable, "=")
+		if e.formatKey(variable[:keyIdx]) == key {
+			return variable[keyIdx+1:]
+		}
+	}
+
+	return nil
 }
 
 func (e *EnvironmentVariablesSource) Deconstruct() {
@@ -83,16 +92,15 @@ func (e *EnvironmentVariablesSource) watcher() {
 			e.RWTex.RLock()
 			for _, variable := range os.Environ() {
 				keyIdx := strings.Index(variable, "=")
-
 				key := variable[:keyIdx]
 				if val, ok := e.Flatmap[key]; !ok || val != variable[keyIdx+1:] {
-					e.NotifyDirtyness()
+					e.NotifyDirtyness(e)
 					break
 				}
 
 				formattedKey := e.formatKey(key)
 				if val, ok := e.Flatmap[formattedKey]; !ok || val != variable[keyIdx+1:] {
-					e.NotifyDirtyness()
+					e.NotifyDirtyness(e)
 					break
 				}
 			}
