@@ -9,10 +9,14 @@ import (
 	"github.com/andreasisnes/goconut"
 )
 
+const (
+	DefaultDelimiter = "__"
+)
+
 type EnvironmentVariablesOptions struct {
 	goconut.SourceOptions
-	Delimiter       string
 	Prefix          string
+	Delimiter       string
 	RefreshInterval time.Duration
 }
 
@@ -26,20 +30,21 @@ type EnvironmentVariablesSource struct {
 func NewEnvironmentVariablesSource(options *EnvironmentVariablesOptions) goconut.ISource {
 	if options == nil {
 		options = &EnvironmentVariablesOptions{
-			Delimiter:       "__",
+			Delimiter:       DefaultDelimiter,
 			RefreshInterval: time.Second,
 		}
 	}
+
 	if options.Delimiter == "" {
-		options.Delimiter = "__"
+		options.Delimiter = DefaultDelimiter
 	}
 
 	env := &EnvironmentVariablesSource{
+		SourceBase: *goconut.NewSourceBase(&options.SourceOptions),
 		QuitC:      make(chan interface{}),
 		EnvOptions: *options,
 		WaitGroup:  sync.WaitGroup{},
 	}
-	goconut.InitSourceBase(&env.SourceBase, &options.SourceOptions)
 
 	if env.SourceOptions.SentinelOptions != nil || env.SourceOptions.ReloadOnChange {
 		go env.watcher()
@@ -49,6 +54,8 @@ func NewEnvironmentVariablesSource(options *EnvironmentVariablesOptions) goconut
 }
 
 func (e *EnvironmentVariablesSource) Load() {
+	e.RWTex.Lock()
+	defer e.RWTex.Unlock()
 	for _, variable := range os.Environ() {
 		keyIdx := strings.Index(variable, "=")
 		e.Flatmap[variable[:keyIdx]] = variable[keyIdx+1:]
@@ -57,16 +64,7 @@ func (e *EnvironmentVariablesSource) Load() {
 }
 
 func (e *EnvironmentVariablesSource) Deconstruct(configuration *goconut.Configuration) {
-	for idx, c := range e.Configurations {
-		if c == configuration {
-			e.Configurations = append(e.Configurations[:idx], e.Configurations[idx+1:]...)
-		}
-	}
-
-	if len(e.Configurations) == 0 {
-		e.QuitC <- struct{}{}
-		e.WaitGroup.Wait()
-	}
+	e.QuitC <- struct{}{}
 }
 
 func (e *EnvironmentVariablesSource) watcher() {
@@ -78,20 +76,23 @@ func (e *EnvironmentVariablesSource) watcher() {
 		case <-e.QuitC:
 			return
 		case <-timer.C:
+			e.RWTex.RLock()
 			for _, variable := range os.Environ() {
 				keyIdx := strings.Index(variable, "=")
+
 				key := variable[:keyIdx]
-				formattedKey := e.formatKey(key)
 				if val, ok := e.Flatmap[key]; !ok || val != variable[keyIdx+1:] {
 					e.NotifyDirtyness()
 					break
 				}
 
+				formattedKey := e.formatKey(key)
 				if val, ok := e.Flatmap[formattedKey]; !ok || val != variable[keyIdx+1:] {
 					e.NotifyDirtyness()
 					break
 				}
 			}
+			e.RWTex.RUnlock()
 		}
 		timer.Reset(e.EnvOptions.RefreshInterval)
 	}
