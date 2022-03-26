@@ -40,7 +40,7 @@ func NewEnvironmentVariablesSource(options *EnvironmentVariablesOptions) goconut
 	}
 
 	env := &EnvironmentVariablesSource{
-		SourceBase: *goconut.NewSourceBase(&options.SourceOptions),
+		SourceBase: *goconut.NewSourceBase(options.SourceOptions),
 		QuitC:      make(chan interface{}),
 		EnvOptions: *options,
 		WaitGroup:  sync.WaitGroup{},
@@ -63,7 +63,11 @@ func (e *EnvironmentVariablesSource) Load() {
 	}
 }
 
-func (e *EnvironmentVariablesSource) Deconstruct(configuration *goconut.Configuration) {
+func (e *EnvironmentVariablesSource) GetRefreshedValue(key string) interface{} {
+	return e.Flatmap[key]
+}
+
+func (e *EnvironmentVariablesSource) Deconstruct() {
 	e.QuitC <- struct{}{}
 }
 
