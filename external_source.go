@@ -13,7 +13,7 @@ type ISource interface {
 
 	GetRefreshedValue(key string) interface{}
 	Load()
-	Deconstruct(configuration *Configuration)
+	Deconstruct()
 }
 
 type SourceBase struct {
@@ -74,8 +74,8 @@ func (source *SourceBase) Options() SourceOptions {
 }
 
 func (source *SourceBase) NotifyDirtyness() {
-	source.RWTex.Lock()
-	defer source.RWTex.Unlock()
+	source.RWTex.RLock()
+	defer source.RWTex.RUnlock()
 
 	if source.RefreshC != nil {
 		source.RefreshC <- source
@@ -99,7 +99,7 @@ func (source *SourceBase) Load() {
 }
 
 // External source implementation
-func (source *SourceBase) Deconstruct(configuration *Configuration) {
+func (source *SourceBase) Deconstruct() {
 	if !source.SourceOptions.Optional {
 		panic("'Deconstruct' is an abstract receiver method. External source needs to implement this method")
 	}

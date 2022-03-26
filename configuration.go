@@ -121,7 +121,7 @@ func (c *Configuration) Deconstruct() IConfiguration {
 		wg.Add(1)
 		go func(sourceArg ISource) {
 			defer wg.Done()
-			sourceArg.Deconstruct(c)
+			sourceArg.Deconstruct()
 		}(source)
 	}
 	wg.Wait()
