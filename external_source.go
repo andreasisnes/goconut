@@ -73,34 +73,11 @@ func (source *SourceBase) Options() SourceOptions {
 	return source.SourceOptions
 }
 
-func (source *SourceBase) NotifyDirtyness() {
+func (source *SourceBase) NotifyDirtyness(externalSource ISource) {
 	source.RWTex.RLock()
 	defer source.RWTex.RUnlock()
 
 	if source.RefreshC != nil {
-		source.RefreshC <- source
-	}
-}
-
-// External source implementation
-func (source *SourceBase) GetRefreshedValue(key string) interface{} {
-	if !source.SourceOptions.Optional {
-		panic("'GetRefreshedValue' is an abstract receiver method. External source needs to implement this method")
-	}
-
-	return nil
-}
-
-// External source implementation
-func (source *SourceBase) Load() {
-	if !source.SourceOptions.Optional {
-		panic("'Load' is an abstract receiver method. External source needs to implement this method")
-	}
-}
-
-// External source implementation
-func (source *SourceBase) Deconstruct() {
-	if !source.SourceOptions.Optional {
-		panic("'Deconstruct' is an abstract receiver method. External source needs to implement this method")
+		source.RefreshC <- externalSource
 	}
 }
