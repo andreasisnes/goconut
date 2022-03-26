@@ -115,6 +115,7 @@ func (c *Configuration) Deconstruct() IConfiguration {
 			fmt.Println("Recovered from error:\n", r)
 		}
 	}()
+
 	c.QuitC <- struct{}{}
 	wg := sync.WaitGroup{}
 	for _, source := range c.Sources {
