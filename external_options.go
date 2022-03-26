@@ -8,8 +8,8 @@ const (
 )
 
 type SourceOptions struct {
-	ReloadOnChange  bool
 	Optional        bool
+	ReloadOnChange  bool
 	SentinelOptions *SentinelOptions
 }
 

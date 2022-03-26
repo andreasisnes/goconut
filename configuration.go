@@ -16,7 +16,7 @@ var (
 type IConfiguration interface {
 	Get(key string, value interface{}) interface{}
 	Deconstruct() IConfiguration
-	Refresh() bool
+	Refresh() (successfullyRefreshed bool)
 	Unmarshal(value interface{}) error
 }
 
@@ -39,7 +39,7 @@ func newConfiguration(sources []ISource) IConfiguration {
 	}
 
 	for _, source := range config.sources {
-		source.Connect(config)
+		source.Connect(config.RefreshC)
 	}
 
 	config.Refresh()
@@ -65,12 +65,13 @@ func (c *Configuration) Get(key string, result interface{}) interface{} {
 	return result
 }
 
-func (c *Configuration) Refresh() bool {
-	successfullyRefreshed := true
+func (c *Configuration) Refresh() (successfullyRefreshed bool) {
 	defer func() {
 		if r := recover(); r != nil {
 			successfullyRefreshed = false
 			fmt.Println("Recovered. Error:\n", r)
+		} else {
+			successfullyRefreshed = true
 		}
 	}()
 
@@ -82,7 +83,6 @@ func (c *Configuration) Refresh() bool {
 			sourceArg.Load()
 		}(source)
 	}
-
 	wg.Wait()
 
 	return successfullyRefreshed
@@ -155,6 +155,11 @@ func (c *Configuration) LoadSentinel(source ISource) {
 			fmt.Println("Recovered from error:\n", r)
 		}
 	}()
+
+	key := source.Options().SentinelOptions.Key
+	if reflect.DeepEqual(source.Get(key), source.GetRefreshedValue(key)) {
+		return
+	}
 
 	switch source.Options().SentinelOptions.RefreshPolicy {
 	case RefreshAll:
