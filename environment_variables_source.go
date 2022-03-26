@@ -18,6 +18,7 @@ type EnvironmentVariablesOptions struct {
 
 type EnvironmentVariablesSource struct {
 	goconut.SourceBase
+	RWTex      sync.RWMutex
 	EnvOptions EnvironmentVariablesOptions
 	WaitGroup  sync.WaitGroup
 	QuitC      chan interface{}
@@ -38,6 +39,7 @@ func NewEnvironmentVariablesSource(options *EnvironmentVariablesOptions) goconut
 		QuitC:      make(chan interface{}),
 		EnvOptions: *options,
 		WaitGroup:  sync.WaitGroup{},
+		RWTex:      sync.RWMutex{},
 	}
 	goconut.InitSourceBase(&env.SourceBase, &options.SourceOptions)
 
@@ -56,9 +58,17 @@ func (e *EnvironmentVariablesSource) Load() {
 	}
 }
 
-func (e *EnvironmentVariablesSource) Deconstruct() {
-	e.QuitC <- struct{}{}
-	e.WaitGroup.Wait()
+func (e *EnvironmentVariablesSource) Deconstruct(configuration *goconut.Configuration) {
+	for idx, c := range e.Configurations {
+		if c == configuration {
+			e.Configurations = append(e.Configurations[:idx], e.Configurations[idx+1:]...)
+		}
+	}
+
+	if len(e.Configurations) == 0 {
+		e.QuitC <- struct{}{}
+		e.WaitGroup.Wait()
+	}
 }
 
 func (e *EnvironmentVariablesSource) watcher() {
