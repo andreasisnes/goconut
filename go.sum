@@ -1,9 +1,3 @@
-github.com/andreasisnes/goconut v0.0.0-20220316133004-93f503b1a520 h1:ynwh3/IbXWFCMLQp4TXqafzkc988JOE6r0KtJpE+DTI=
-github.com/andreasisnes/goconut v0.0.0-20220316133004-93f503b1a520/go.mod h1:D1HC/4wM+AZimA3tYjnKPdK33QHOUkFizrlWamCA/8I=
-github.com/andreasisnes/goconut v0.0.0-20220325162535-06e9f8db3332 h1:aAnSWWlCCzRS3uZCqOh5t9CNVRp2EnpIiBpD/Wy0YTk=
-github.com/andreasisnes/goconut v0.0.0-20220325162535-06e9f8db3332/go.mod h1:D1HC/4wM+AZimA3tYjnKPdK33QHOUkFizrlWamCA/8I=
-github.com/andreasisnes/goconut v0.0.0-20220326105345-48db2c4c890d h1:IcGy9qkeUH4lg6FlG63iXCh186DV5LPKvOXW5zDwrxY=
-github.com/andreasisnes/goconut v0.0.0-20220326105345-48db2c4c890d/go.mod h1:D1HC/4wM+AZimA3tYjnKPdK33QHOUkFizrlWamCA/8I=
 github.com/andreasisnes/goconut v0.0.0-20220326122433-bc5aa5abdfdc h1:4SUkNJUUuxuqJGOHyjpN2LBAb91Ar82QssMwCXWFBsA=
 github.com/andreasisnes/goconut v0.0.0-20220326122433-bc5aa5abdfdc/go.mod h1:D1HC/4wM+AZimA3tYjnKPdK33QHOUkFizrlWamCA/8I=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
