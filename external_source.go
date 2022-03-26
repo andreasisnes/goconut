@@ -1,5 +1,9 @@
 package goconut
 
+import (
+	"sync"
+)
+
 type ISource interface {
 	Exists(key string) bool
 	Get(key string) interface{}
@@ -16,13 +20,14 @@ func NewSourceBase(c *Configuration) ISource {
 
 type SourceBase struct {
 	Flatmap        map[string]interface{}
+	RWTex          *sync.RWMutex
 	Configurations []*Configuration
 	SourceOptions  SourceOptions
-	RefreshC       chan ISource
 }
 
 func InitSourceBase(base *SourceBase, options *SourceOptions) {
 	base.Flatmap = make(map[string]interface{})
+	base.RWTex = &sync.RWMutex{}
 	base.Configurations = make([]*Configuration, 0)
 	base.SourceOptions = *options
 }
@@ -42,11 +47,17 @@ func (s *SourceBase) Connect(configuration *Configuration) {
 }
 
 func (s *SourceBase) Exists(key string) bool {
+	s.RWTex.RLock()
+	defer s.RWTex.RUnlock()
+
 	return s.Get(key) != nil
 }
 
 func (s *SourceBase) Get(key string) (value interface{}) {
-	if s.Flatmap == nil {
+	s.RWTex.Lock()
+	defer s.RWTex.Unlock()
+
+	if s.Flatmap == nil || s.RWTex == nil {
 		InitSourceBase(s, &s.SourceOptions)
 		return nil
 	}
@@ -65,6 +76,9 @@ func (s *SourceBase) NotifyDirtyness() {
 }
 
 func (s *SourceBase) GetKeys() (result []string) {
+	s.RWTex.RLock()
+	defer s.RWTex.RUnlock()
+
 	result = make([]string, 0)
 	for key := range s.Flatmap {
 		result = append(result, key)

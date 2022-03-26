@@ -43,7 +43,6 @@ func newConfiguration(sources []ISource) IConfiguration {
 	}
 
 	config.Refresh()
-	config.waitgroup.Add(1)
 	go config.autoRefresh()
 
 	return config
@@ -132,7 +131,9 @@ func (c *Configuration) Deconstruct() IConfiguration {
 }
 
 func (c *Configuration) autoRefresh() {
+	c.waitgroup.Add(1)
 	defer c.waitgroup.Done()
+
 	for {
 		select {
 		case source := <-c.RefreshC:
@@ -140,7 +141,7 @@ func (c *Configuration) autoRefresh() {
 				source.Load()
 			}
 			if source.Options().SentinelOptions != nil {
-				c.newMethod(source)
+				c.LoadSentinel(source)
 			}
 		case <-c.QuitC:
 			return
@@ -148,7 +149,7 @@ func (c *Configuration) autoRefresh() {
 	}
 }
 
-func (c *Configuration) newMethod(source ISource) {
+func (c *Configuration) LoadSentinel(source ISource) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Println("Recovered from error:\n", r)
