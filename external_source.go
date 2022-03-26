@@ -9,7 +9,7 @@ type ISource interface {
 	Exists(key string) bool
 	Get(key string) interface{}
 	GetKeys() []string
-	Options() *SourceOptions
+	Options() SourceOptions
 
 	GetRefreshedValue(key string) interface{}
 	Load()
@@ -19,15 +19,15 @@ type ISource interface {
 type SourceBase struct {
 	RefreshC      chan ISource
 	Flatmap       map[string]interface{}
-	RWTex         *sync.RWMutex
-	SourceOptions *SourceOptions
+	RWTex         sync.RWMutex
+	SourceOptions SourceOptions
 }
 
 // Used by external Sources
-func NewSourceBase(options *SourceOptions) *SourceBase {
+func NewSourceBase(options SourceOptions) *SourceBase {
 	return &SourceBase{
 		Flatmap:       make(map[string]interface{}),
-		RWTex:         &sync.RWMutex{},
+		RWTex:         sync.RWMutex{},
 		SourceOptions: options,
 	}
 }
@@ -69,7 +69,7 @@ func (s *SourceBase) GetKeys() (result []string) {
 	return result
 }
 
-func (source *SourceBase) Options() *SourceOptions {
+func (source *SourceBase) Options() SourceOptions {
 	return source.SourceOptions
 }
 
