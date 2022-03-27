@@ -3,7 +3,7 @@ module github.com/andreasisnes/goconut/v1.file
 go 1.17
 
 require (
-	github.com/andreasisnes/goconut v0.0.0-20220315150211-b9e932b30de4
+	github.com/andreasisnes/goconut v0.0.3-0.20220326151919-0822df9dae30
 	github.com/andreasisnes/goflat v0.0.0-20220315111651-a96d743104a8
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/pelletier/go-toml v1.9.4

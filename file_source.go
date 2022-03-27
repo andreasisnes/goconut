@@ -2,7 +2,6 @@ package file
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"os"
 	"path"
@@ -16,143 +15,143 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	ErrFileProviderFileNotExist = errors.New("provided argument 'filename' does not exists")
+const (
+	DefaultFile = "settings.json"
 )
 
+type Options struct {
+	goconut.SourceOptions
+	Path string
+}
+
 type FileSource struct {
-	Shutdown       chan struct{}
-	Content        []byte
-	Filename       string
-	Optional       bool
-	ReloadOnChange bool
-	DirtyFile      bool
-	WaitGroup      *sync.WaitGroup
-	Config         map[string]interface{}
-	ConfigFlat     map[string]interface{}
+	goconut.SourceBase
+	FileOptions   Options
+	Configuration map[string]interface{}
+	Content       []byte
+	WaitGroup     sync.WaitGroup
+	QuitC         chan interface{}
 }
 
-func NewFileProvider(filename string, optional, reloadOnChange bool) goconut.ISource {
-	fs := &FileSource{
-		WaitGroup:      &sync.WaitGroup{},
-		Filename:       filename,
-		Optional:       optional,
-		ReloadOnChange: reloadOnChange,
-		DirtyFile:      false,
-		Content:        make([]byte, 0),
-		Config:         make(map[string]interface{}),
-		ConfigFlat:     make(map[string]interface{}),
+func NewFileSource(options *Options) goconut.ISource {
+	if options == nil {
+		options = &Options{
+			Path: DefaultFile,
+		}
 	}
 
-	if reloadOnChange {
-		go fs.watcher()
+	source := &FileSource{
+		SourceBase:    *goconut.NewSourceBase(options.SourceOptions),
+		FileOptions:   *options,
+		Configuration: make(map[string]interface{}),
+		QuitC:         make(chan interface{}),
+		WaitGroup:     sync.WaitGroup{},
 	}
 
-	return fs
+	if source.SourceOptions.SentinelOptions != nil || source.SourceOptions.ReloadOnChange {
+		go source.watcher()
+	}
+
+	return source
 }
 
-func (f *FileSource) Exists(key string) bool {
-	return f.Get(key) != nil
-}
-
-func (f *FileSource) Get(key string) interface{} {
-	if val, ok := f.ConfigFlat[key]; ok {
-		return val
-	}
-
+func (source *FileSource) GetRefreshedValue(key string) interface{} {
 	return nil
 }
 
-func (f *FileSource) IsDirty() bool {
-	return f.DirtyFile
+func (source *FileSource) Deconstruct() {
+	source.QuitC <- struct{}{}
 }
 
-func (f *FileSource) GetKeys() []string {
-	res := make([]string, 0)
-	for k := range f.ConfigFlat {
-		res = append(res, k)
-	}
-
-	return res
-}
-
-func (f *FileSource) Deconstruct() {
-	f.Shutdown <- struct{}{}
-	f.WaitGroup.Wait()
-}
-
-func (f *FileSource) Load() {
-	if fileExists(f.Filename) {
-		if content, err := os.ReadFile(f.Filename); err != nil {
+func (source *FileSource) Load() {
+	if fileExists(source.FileOptions.Path) {
+		if content, err := os.ReadFile(source.FileOptions.Path); err != nil {
 			panic(err)
 		} else {
-			f.Content = content
-			extension := strings.ToLower(path.Ext(f.Filename))
+			source.Content = content
+			extension := strings.ToLower(path.Ext(source.FileOptions.Path))
 			switch extension {
 			case ".json":
-				f.unmarshal(json.Unmarshal)
+				source.unmarshal(json.Unmarshal)
 			case ".yml", ".yaml":
-				f.unmarshal(yaml.Unmarshal)
+				source.unmarshal(yaml.Unmarshal)
 			case ".toml":
-				f.unmarshal(toml.Unmarshal)
+				source.unmarshal(toml.Unmarshal)
 			default:
-				if !f.Optional {
-					log.Fatalf("'%s' is not a <.json, yml, yaml, toml> file", path.Base(f.Filename))
+				if !source.FileOptions.Optional {
+					log.Fatalf("'%s' is not a <.json, yml, yaml, toml> file", path.Base(source.FileOptions.Path))
 				}
 			}
-			f.DirtyFile = false
 		}
 	} else {
-		if f.Optional {
-			panic(ErrFileProviderFileNotExist)
+		if !source.FileOptions.Optional {
+			panic(os.ErrNotExist)
 		}
 	}
 }
 
-func (f *FileSource) watcher() {
-	f.WaitGroup.Add(1)
-	defer f.WaitGroup.Done()
+func (source *FileSource) watcher() {
+	source.WaitGroup.Add(1)
+	defer source.WaitGroup.Done()
 
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		log.Fatal(err)
+	watcher, shouldReturn := source.createWatcher()
+	if shouldReturn {
+		return
 	}
 	defer watcher.Close()
 
-	if !fileExists(f.Filename) {
-		return
-	}
-	err = watcher.Add(f.Filename)
-	if err != nil {
-		return
-	}
-
 	for {
 		select {
-		case event, ok := <-watcher.Events:
-			if !ok {
-				return
-			}
+		case event := <-watcher.Events:
 			if event.Op&fsnotify.Write == fsnotify.Write {
-				f.DirtyFile = true
+				source.NotifyDirtyness(source)
 			}
-		case err, ok := <-watcher.Errors:
-			if !ok {
-				return
+		case err := <-watcher.Errors:
+			if source.FileOptions.Optional {
+				panic(err)
 			}
-			log.Println(err)
-		case <-f.Shutdown:
+			return
+		case <-source.QuitC:
 			return
 		}
 	}
 }
 
-func (f *FileSource) unmarshal(fn func([]byte, interface{}) error) error {
-	if err := fn(f.Content, &f.Config); err != nil {
+func (source *FileSource) createWatcher() (*fsnotify.Watcher, bool) {
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		if !source.FileOptions.Optional {
+			panic(err)
+		}
+
+		return nil, true
+	}
+
+	if !fileExists(source.FileOptions.Path) {
+		if !source.FileOptions.Optional {
+			panic(os.ErrNotExist)
+		}
+
+		return nil, true
+	}
+
+	if err = watcher.Add(source.FileOptions.Path); err != nil {
+		if !source.FileOptions.Optional {
+			panic(os.ErrNotExist)
+		}
+
+		return nil, true
+	}
+
+	return watcher, false
+}
+
+func (source *FileSource) unmarshal(fn func([]byte, interface{}) error) error {
+	if err := fn(source.Content, &source.Configuration); err != nil {
 		return err
 	}
 
-	f.ConfigFlat = goflat.Map(f.Config, &goflat.Options{
+	source.Flatmap = goflat.Map(source.Configuration, &goflat.Options{
 		Delimiter: goflat.DefaultDelimiter,
 		Fold:      goflat.UpperCaseFold,
 	})

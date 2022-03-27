@@ -1,5 +1,5 @@
-github.com/andreasisnes/goconut v0.0.0-20220315150211-b9e932b30de4 h1:126TMxz60QY1HTLEkO2MQw7PDrPkFieVBIJcao2KgBM=
-github.com/andreasisnes/goconut v0.0.0-20220315150211-b9e932b30de4/go.mod h1:D1HC/4wM+AZimA3tYjnKPdK33QHOUkFizrlWamCA/8I=
+github.com/andreasisnes/goconut v0.0.3-0.20220326151919-0822df9dae30 h1:KmUz1BGtU1pZclmlD++7xKmuNYYRPj8MxUA5pjPs/c0=
+github.com/andreasisnes/goconut v0.0.3-0.20220326151919-0822df9dae30/go.mod h1:D1HC/4wM+AZimA3tYjnKPdK33QHOUkFizrlWamCA/8I=
 github.com/andreasisnes/goflat v0.0.0-20220315111651-a96d743104a8 h1:Bl9h7ZgTOzCreHuncektYv8qUu8WVTuMnAXPK7a1Re0=
 github.com/andreasisnes/goflat v0.0.0-20220315111651-a96d743104a8/go.mod h1:F5RmncmOe46hgCxa0QlF45STp2xojqj8urKa3RBtSXw=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
